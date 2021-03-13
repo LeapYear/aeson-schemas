@@ -1,11 +1,3 @@
-{-|
-Module      :  Data.Aeson.Schema.Key
-Maintainer  :  Brandon Chinn <brandon@leapyear.io>
-Stability   :  experimental
-Portability :  portable
-
-Defines a SchemaKey.
--}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -17,23 +9,31 @@ Defines a SchemaKey.
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeInType #-}
 
-module Data.Aeson.Schema.Key
-  ( SchemaKey'(..)
-  , SchemaKeyV
-  , fromSchemaKeyV
-  , showSchemaKeyV
-  , getContext
-  , toContext
-  , SchemaKey
-  , IsSchemaKey(..)
-  , fromSchemaKey
-  , showSchemaKey
-  ) where
+{- |
+Module      :  Data.Aeson.Schema.Key
+Maintainer  :  Brandon Chinn <brandon@leapyear.io>
+Stability   :  experimental
+Portability :  portable
+
+Defines a SchemaKey.
+-}
+module Data.Aeson.Schema.Key (
+  SchemaKey' (..),
+  SchemaKeyV,
+  fromSchemaKeyV,
+  showSchemaKeyV,
+  getContext,
+  toContext,
+  SchemaKey,
+  IsSchemaKey (..),
+  fromSchemaKey,
+  showSchemaKey,
+) where
 
 import qualified Data.Aeson as Aeson
-import Data.Hashable (Hashable)
 import qualified Data.HashMap.Strict as HashMap
-import Data.Proxy (Proxy(..))
+import Data.Hashable (Hashable)
+import Data.Proxy (Proxy (..))
 import qualified Data.Text as Text
 import GHC.Generics (Generic)
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
@@ -44,9 +44,9 @@ import Data.Aeson.Schema.Utils.Invariant (unreachable)
 -- | A key in a JSON object schema.
 data SchemaKey' s
   = NormalKey s
-  | PhantomKey s
-    -- ^ A key that doesn't actually exist in the object, but whose content should be parsed from
+  | -- | A key that doesn't actually exist in the object, but whose content should be parsed from
     -- the current object.
+    PhantomKey s
   deriving (Show, Eq, Generic, Hashable, Lift)
 
 -- | A value-level SchemaKey
@@ -60,8 +60,9 @@ showSchemaKeyV :: SchemaKeyV -> String
 showSchemaKeyV (NormalKey key) = show key
 showSchemaKeyV (PhantomKey key) = "[" ++ key ++ "]"
 
--- | Given schema `{ key: innerSchema }` for JSON data `{ key: val1 }`, get the JSON
--- Value that `innerSchema` should parse.
+{- | Given schema `{ key: innerSchema }` for JSON data `{ key: val1 }`, get the JSON
+ Value that `innerSchema` should parse.
+-}
 getContext :: SchemaKeyV -> Aeson.Object -> Aeson.Value
 getContext = \case
   -- `innerSchema` should parse `val1`
@@ -69,8 +70,9 @@ getContext = \case
   -- `innerSchema` should parse the same object that `key` is in
   PhantomKey _ -> Aeson.Object
 
--- | Given JSON data `val` adhering to `innerSchema`, get the JSON object that should be
--- merged with the outer JSON object.
+{- | Given JSON data `val` adhering to `innerSchema`, get the JSON object that should be
+ merged with the outer JSON object.
+-}
 toContext :: SchemaKeyV -> Aeson.Value -> Aeson.Object
 toContext = \case
   -- `val` should be inserted with key `key`
@@ -90,12 +92,12 @@ class KnownSymbol (FromSchemaKey key) => IsSchemaKey (key :: SchemaKey) where
   type FromSchemaKey key :: Symbol
   toSchemaKeyV :: Proxy key -> SchemaKeyV
 
-instance KnownSymbol key => IsSchemaKey ('NormalKey key) where
-  type FromSchemaKey ('NormalKey key) = key
+instance KnownSymbol key => IsSchemaKey ( 'NormalKey key) where
+  type FromSchemaKey ( 'NormalKey key) = key
   toSchemaKeyV _ = NormalKey $ symbolVal $ Proxy @key
 
-instance KnownSymbol key => IsSchemaKey ('PhantomKey key) where
-  type FromSchemaKey ('PhantomKey key) = key
+instance KnownSymbol key => IsSchemaKey ( 'PhantomKey key) where
+  type FromSchemaKey ( 'PhantomKey key) = key
   toSchemaKeyV _ = PhantomKey $ symbolVal $ Proxy @key
 
 fromSchemaKey :: forall key. IsSchemaKey key => String

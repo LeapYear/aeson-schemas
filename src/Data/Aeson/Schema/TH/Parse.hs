@@ -1,4 +1,8 @@
-{-|
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
+
+{- |
 Module      :  Data.Aeson.Schema.TH.Parse
 Maintainer  :  Brandon Chinn <brandon@leapyear.io>
 Stability   :  experimental
@@ -6,13 +10,10 @@ Portability :  portable
 
 Definitions for parsing input text in QuasiQuoters.
 -}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Data.Aeson.Schema.TH.Parse where
 
 import Control.Monad (MonadPlus, void)
+
 #if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
 #endif
@@ -70,28 +71,32 @@ parseSchemaDef = runParserFail $ do
       let parseSchemaUnion schemaDefs
             | length schemaDefs == 1 = NonEmpty.head schemaDefs
             | otherwise = SchemaDefUnion schemaDefs
-      in fmap parseSchemaUnion $ parseSchemaDefWithoutUnions `sepBy1` lexeme "|"
+       in fmap parseSchemaUnion $ parseSchemaDefWithoutUnions `sepBy1` lexeme "|"
 
-    parseSchemaDefWithoutUnions = choice
-      [ between (lexeme "{") (lexeme "}") $ SchemaDefObj <$> parseSchemaDefObjItems
-      , between (lexeme "(") (lexeme ")") parseSchemaDefWithUnions
-      , lexeme "Maybe" *> (SchemaDefMaybe <$> parseSchemaDefWithoutUnions)
-      , lexeme "Try" *> (SchemaDefTry <$> parseSchemaDefWithoutUnions)
-      , lexeme "List" *> (SchemaDefList <$> parseSchemaDefWithoutUnions)
-      , SchemaDefType <$> identifier upperChar
-      , SchemaDefInclude <$> parseSchemaReference
-      ] <* space -- allow any trailing spaces
-
-    parseSchemaDefObjItems = parseSchemaDefObjItem `sepEndBy1` lexeme ","
-    parseSchemaDefObjItem = choice
-      [ SchemaDefObjPair <$> parseSchemaDefPair
-      , SchemaDefObjExtend <$> parseSchemaReference
-      ] <* space -- allow any trailing spaces
-    parseSchemaDefPair = do
-      key <- choice
-        [ SchemaDefObjKeyNormal <$> jsonKey
-        , SchemaDefObjKeyPhantom <$> between (lexeme' "[") (lexeme' "]") jsonKey'
+    parseSchemaDefWithoutUnions =
+      choice
+        [ between (lexeme "{") (lexeme "}") $ SchemaDefObj <$> parseSchemaDefObjItems
+        , between (lexeme "(") (lexeme ")") parseSchemaDefWithUnions
+        , lexeme "Maybe" *> (SchemaDefMaybe <$> parseSchemaDefWithoutUnions)
+        , lexeme "Try" *> (SchemaDefTry <$> parseSchemaDefWithoutUnions)
+        , lexeme "List" *> (SchemaDefList <$> parseSchemaDefWithoutUnions)
+        , SchemaDefType <$> identifier upperChar
+        , SchemaDefInclude <$> parseSchemaReference
         ]
+        <* space -- allow any trailing spaces
+    parseSchemaDefObjItems = parseSchemaDefObjItem `sepEndBy1` lexeme ","
+    parseSchemaDefObjItem =
+      choice
+        [ SchemaDefObjPair <$> parseSchemaDefPair
+        , SchemaDefObjExtend <$> parseSchemaReference
+        ]
+        <* space -- allow any trailing spaces
+    parseSchemaDefPair = do
+      key <-
+        choice
+          [ SchemaDefObjKeyNormal <$> jsonKey
+          , SchemaDefObjKeyPhantom <$> between (lexeme' "[") (lexeme' "]") jsonKey'
+          ]
       lexeme ":"
       value <- parseSchemaDefWithUnions
       return (key, value)
@@ -100,9 +105,10 @@ parseSchemaDef = runParserFail $ do
 {- GetterExp -}
 
 data GetterExp = GetterExp
-  { start     :: Maybe String
+  { start :: Maybe String
   , getterOps :: GetterOps
-  } deriving (Show)
+  }
+  deriving (Show)
 
 parseGetterExp :: MonadFail m => String -> m GetterExp
 parseGetterExp = runParserFail $ do
@@ -117,8 +123,9 @@ parseGetterExp = runParserFail $ do
 
 data UnwrapSchema = UnwrapSchema
   { startSchema :: String
-  , getterOps   :: GetterOps
-  } deriving (Show)
+  , getterOps :: GetterOps
+  }
+  deriving (Show)
 
 parseUnwrapSchema :: MonadFail m => String -> m UnwrapSchema
 parseUnwrapSchema = runParserFail $ do
@@ -131,9 +138,10 @@ parseUnwrapSchema = runParserFail $ do
 
 {- GetterOps -}
 
--- | A non-empty list of GetterOperations.
---
--- Invariant: Any GetterList/GetterTuple operations MUST be last.
+{- | A non-empty list of GetterOperations.
+
+ Invariant: Any GetterList/GetterTuple operations MUST be last.
+-}
 type GetterOps = NonEmpty GetterOperation
 
 parseGetterOps :: Parser GetterOps
@@ -145,25 +153,28 @@ data GetterOperation
   | GetterMapList
   | GetterMapMaybe
   | GetterBranch Int
-  -- suffixes
-  | GetterList (NonEmpty GetterOps)
+  | -- suffixes
+    GetterList (NonEmpty GetterOps)
   | GetterTuple (NonEmpty GetterOps)
   deriving (Show)
 
 parseGetterOp :: Parser GetterOperation
-parseGetterOp = choice
-  [ lexeme "!" $> GetterBang
-  , lexeme "[]" $> GetterMapList
-  , lexeme "?" $> GetterMapMaybe
-  , lexeme "@" *> (GetterBranch . read . NonEmpty.toList <$> some digitChar)
-  , optional (lexeme ".") *> (GetterKey <$> jsonKey)
-  ]
+parseGetterOp =
+  choice
+    [ lexeme "!" $> GetterBang
+    , lexeme "[]" $> GetterMapList
+    , lexeme "?" $> GetterMapMaybe
+    , lexeme "@" *> (GetterBranch . read . NonEmpty.toList <$> some digitChar)
+    , optional (lexeme ".") *> (GetterKey <$> jsonKey)
+    ]
 
 parseGetterOpSuffix :: Parser GetterOperation
-parseGetterOpSuffix = optional (lexeme ".") *> choice
-  [ fmap GetterList $ between (lexeme "[") (lexeme "]") $ parseGetterOps `sepBy1` lexeme ","
-  , fmap GetterTuple $ between (lexeme "(") (lexeme ")") $ parseGetterOps `sepBy1` lexeme ","
-  ]
+parseGetterOpSuffix =
+  optional (lexeme ".")
+    *> choice
+      [ fmap GetterList $ between (lexeme "[") (lexeme "]") $ parseGetterOps `sepBy1` lexeme ","
+      , fmap GetterTuple $ between (lexeme "(") (lexeme ")") $ parseGetterOps `sepBy1` lexeme ","
+      ]
 
 {- Parser primitives -}
 
@@ -187,10 +198,11 @@ namespacedIdentifier start = choice [lexeme "(" *> namespaced <* lexeme ")", ide
   where
     ident = identifier start
     namespaced = intercalate "." <$> manyAndEnd (identifier upperChar <* lexeme ".") ident
-    manyAndEnd p end = choice
-      [ try $ p >>= \x -> (x:) <$> manyAndEnd p end
-      , (:[]) <$> end
-      ]
+    manyAndEnd p end =
+      choice
+        [ try $ p >>= \x -> (x :) <$> manyAndEnd p end
+        , (: []) <$> end
+        ]
 
 -- | An optionally quoted JSON key.
 jsonKey :: Parser String
@@ -198,10 +210,13 @@ jsonKey = choice [char '"' *> jsonKey' <* char '"', jsonKey']
 
 -- | A string that can be used as a JSON key.
 jsonKey' :: Parser String
-jsonKey' = fmap NonEmpty.toList $ some $ choice
-  [ try $ char '\\' *> anySingle'
-  , noneOf $ [' ', '\\', '"'] ++ schemaChars ++ getChars
-  ]
+jsonKey' =
+  fmap NonEmpty.toList $
+    some $
+      choice
+        [ try $ char '\\' *> anySingle'
+        , noneOf $ [' ', '\\', '"'] ++ schemaChars ++ getChars
+        ]
   where
 #if MIN_VERSION_megaparsec(7,0,0)
     anySingle' = anySingle
@@ -228,13 +243,14 @@ sepBy1 p sep = NonEmpty.fromList <$> Megaparsec.sepBy1 p sep
 sepEndBy1 :: MonadPlus f => f a -> f sep -> f (NonEmpty a)
 sepEndBy1 p sep = NonEmpty.fromList <$> Megaparsec.sepEndBy1 p sep
 
--- | Return a non-empty list containing elements from the given parsers in order.
---
--- i.e. for `someWith [p1, p2, p3]`, elements parsed with `p1` will come before
--- elements parsed with `p2` and `p3`, etc.
---
--- An individual parser in the list may not parse anything, but at least one parser must return
--- something.
+{- | Return a non-empty list containing elements from the given parsers in order.
+
+ i.e. for `someWith [p1, p2, p3]`, elements parsed with `p1` will come before
+ elements parsed with `p2` and `p3`, etc.
+
+ An individual parser in the list may not parse anything, but at least one parser must return
+ something.
+-}
 someWith :: MonadParsec e s m => [m a] -> m (NonEmpty a)
 someWith ps = do
   as <- concatMapM (many . try) ps

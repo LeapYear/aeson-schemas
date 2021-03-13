@@ -9,12 +9,15 @@ import qualified Tests.SumType
 import qualified Tests.UnwrapQQ
 
 main :: IO ()
-main = defaultMain $ testGroup "aeson-schemas"
-  [ Tests.Object.test
-  , Tests.GetQQ.test
-  , Tests.UnwrapQQ.test
-  , Tests.SchemaQQ.test
-  , Tests.MkGetter.test
-  , Tests.EnumTH.test
-  , Tests.SumType.test
-  ]
+main =
+  defaultMain $
+    testGroup
+      "aeson-schemas"
+      [ Tests.Object.test
+      , Tests.GetQQ.test
+      , Tests.UnwrapQQ.test
+      , Tests.SchemaQQ.test
+      , Tests.MkGetter.test
+      , Tests.EnumTH.test
+      , Tests.SumType.test
+      ]

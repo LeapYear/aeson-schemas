@@ -1,11 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Data.Aeson.Schema.Utils.NameLike
-  ( NameLike(..)
-  , fromName
-  , resolveName
-  ) where
+module Data.Aeson.Schema.Utils.NameLike (
+  NameLike (..),
+  fromName,
+  resolveName,
+) where
 
 import Data.Text (Text)
 import Language.Haskell.TH.Syntax (Name, Q, lookupTypeName, nameBase)
@@ -26,11 +26,10 @@ fromName = \case
 resolveName :: NameLike -> Q Name
 resolveName = \case
   -- some hardcoded cases
-  NameRef "Bool"   -> pure ''Bool
-  NameRef "Int"    -> pure ''Int
+  NameRef "Bool" -> pure ''Bool
+  NameRef "Int" -> pure ''Int
   NameRef "Double" -> pure ''Double
-  NameRef "Text"   -> pure ''Text
-
+  NameRef "Text" -> pure ''Text
   -- general cases
-  NameRef name     -> lookupTypeName name >>= maybe (fail $ "Unknown type: " ++ name) pure
-  NameTH name      -> pure name
+  NameRef name -> lookupTypeName name >>= maybe (fail $ "Unknown type: " ++ name) pure
+  NameTH name -> pure name

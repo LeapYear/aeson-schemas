@@ -1,4 +1,4 @@
-{-|
+{- |
 Module      :  Data.Aeson.Schema.TH
 Maintainer  :  Brandon Chinn <brandon@leapyear.io>
 Stability   :  experimental
@@ -20,18 +20,19 @@ use these QuasiQuoters:
 * FlexibleContexts
 * TypeFamilies
 -}
+module Data.Aeson.Schema.TH (
+  schema,
+  get,
+  unwrap,
 
-module Data.Aeson.Schema.TH
-  ( schema
-  , get
-  , unwrap
   -- * Utilities
-  , mkGetter
+  mkGetter,
+
   -- * Helpers for Enum types
-  , mkEnum
-  , genFromJSONEnum
-  , genToJSONEnum
-  ) where
+  mkEnum,
+  genFromJSONEnum,
+  genToJSONEnum,
+) where
 
 import Data.Aeson.Schema.TH.Enum
 import Data.Aeson.Schema.TH.Get

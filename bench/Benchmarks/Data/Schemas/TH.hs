@@ -1,13 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Benchmarks.Data.Schemas.TH
-  ( SchemaDef(..)
-  , genSchema
-  , genSchema'
-  , genSchemaDef
-  , keysTo
-  , mkField
-  ) where
+module Benchmarks.Data.Schemas.TH (
+  SchemaDef (..),
+  genSchema,
+  genSchema',
+  genSchemaDef,
+  keysTo,
+  mkField,
+) where
 
 import Data.List (intercalate)
 import Language.Haskell.TH
@@ -16,9 +16,12 @@ import Language.Haskell.TH.Quote
 import Data.Aeson.Schema (schema)
 
 data SchemaDef
-  = Field String String   -- ^ { a: Int }
-  | Include String String -- ^ { a: #OtherSchema }
-  | Ref String            -- ^ { #OtherSchema }
+  = -- | { a: Int }
+    Field String String
+  | -- | { a: #OtherSchema }
+    Include String String
+  | -- | { #OtherSchema }
+    Ref String
 
 genSchema :: Name -> [SchemaDef] -> DecQ
 genSchema name = genSchema' name . genSchemaDef
@@ -35,7 +38,7 @@ genSchemaDef schemaDef = "{" ++ intercalate "," (map fromSchemaDef schemaDef) ++
       Ref name -> "#" ++ name
 
 keysTo :: Int -> [SchemaDef]
-keysTo n = map (\i -> Field (mkField i) "Int") [1..n]
+keysTo n = map (\i -> Field (mkField i) "Int") [1 .. n]
 
 mkField :: Int -> String
 mkField i = "a" ++ show i

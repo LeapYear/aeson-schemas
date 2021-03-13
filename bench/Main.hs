@@ -6,9 +6,10 @@ import qualified Benchmarks.Show
 import qualified Benchmarks.ToJSON
 
 main :: IO ()
-main = defaultMain
-  [ Benchmarks.SchemaQQ.benchmarks
-  , Benchmarks.Show.benchmarks
-  , Benchmarks.FromJSON.benchmarks
-  , Benchmarks.ToJSON.benchmarks
-  ]
+main =
+  defaultMain
+    [ Benchmarks.SchemaQQ.benchmarks
+    , Benchmarks.Show.benchmarks
+    , Benchmarks.FromJSON.benchmarks
+    , Benchmarks.ToJSON.benchmarks
+    ]

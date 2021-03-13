@@ -9,11 +9,11 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Data.Aeson.Schema.Utils.All
-  ( All(..)
-  ) where
+module Data.Aeson.Schema.Utils.All (
+  All (..),
+) where
 
-import Data.Proxy (Proxy(..))
+import Data.Proxy (Proxy (..))
 
 -- | A type family for traversing a type-level list.
 class All f xs where

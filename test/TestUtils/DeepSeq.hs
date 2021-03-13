@@ -3,7 +3,8 @@
 
 module TestUtils.DeepSeq () where
 
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq (NFData (..))
+
 #if MIN_VERSION_template_haskell(2,16,0)
 import Control.DeepSeq (rwhnf)
 import GHC.ForeignPtr (ForeignPtr)
