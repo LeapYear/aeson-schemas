@@ -93,12 +93,12 @@ arbitraryObject = do
       let schemaType = quoteType schema $ showSchemaV schemaV
        in [|genSchema' (Proxy :: Proxy (Object $schemaType)) schemaV|]
 
-{- | Splices to a 'forAll' with 'arbitraryObject', outputting information about the object
- generated, to ensure we get good generation.
+{- |
+Splices to a 'forAll' with 'arbitraryObject', outputting information about the object
+generated, to ensure we get good generation.
+
+>>> $(forAllArbitraryObjects) :: Testable prop => ArbitraryObject -> prop
 -}
-
--- $(forAllArbitraryObjects) :: Testable prop => ArbitraryObject -> prop
-
 forAllArbitraryObjects :: ExpQ
 forAllArbitraryObjects = [|forAllArbitraryObjects' $arbitraryObject|]
 
