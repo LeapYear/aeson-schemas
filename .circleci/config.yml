@@ -79,7 +79,7 @@ orbs:
                 stack build "${STACK_ARGS[@]}" --only-dependencies
 
                 if [[ -n "${INSTALL_LINTERS}" ]]; then
-                    stack build -j1 hlint stylish-haskell
+                    stack build -j1 hlint fourmolu
                 fi
 
                 if [[ -n "${INSTALL_HPC_LCOV}" ]]; then
@@ -142,7 +142,8 @@ jobs:
                   set +e
                   STATUS=0
                   scripts/hlint.sh || STATUS=1
-                  scripts/stylish-haskell.sh || STATUS=1
+                  scripts/fourmolu.sh
+                  git diff --exit-code '*.hs' || STATUS=1
                   exit "${STATUS}"
 
       # test
